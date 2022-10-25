@@ -183,3 +183,53 @@ fn dangle() -> &String {
     &s
 } // s will be dropped when this function goes out of scope, therefore &s will refer to invalid memory.
 ```
+
+# Slices
+
+Slices let us reference a **contiguous sequence of elements in a collection without taking ownership**.
+
+Internally, slices keep track of a pointer to the starting element and a length. However unlike manually managing a pointer and length, slices are tied to the original value. Therefore, we do not have to worry about the pointer or length being out of sync with the original value.
+
+```rs
+let s = String::from("hello world");
+let hello = &s[0..5]; // pointer to the start with length 5.
+let world = &s[6..11]; // pointer to the 7th character with length 5.
+```
+
+```rs
+// Defining the signature with `&str` allows both string literals and `String` to be used.
+fn first_word(s: &str) -> &str {
+    let bytes = s.as_bytes();
+
+    for (i, &item) in bytes.iter().enumerate() {
+        if item == b' ' {
+            return &s[..i];
+        }
+    }
+
+    &s[..]
+}
+
+fn main() {
+    let s = String::from("hello world");
+    let hello = first_word(&s[..]); // `hello` has an immutable borrowed reference to `s`.
+    s.clear(); // cannot borrow `s` as mutable because it is also borrowed as immutable.
+}
+```
+
+## Ranges
+
+A range is represented with `start..end`.
+
+`start` can be omitted to start from `0`, `end` can be omitted to end on `len`, and both can be omitted to create a range over the whole collection.
+
+Ranges can be used to create slices.
+
+```rs
+let s = String::from("hello world");
+let slice = &s[..];
+```
+
+> String slice range indices must occur at valid UTF-8 character boundaries.
+
+String literals are also slices to a specific point in the binary, and therefore are immutable.
