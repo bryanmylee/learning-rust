@@ -217,6 +217,13 @@ fn main() {
 }
 ```
 
+```rs
+let a = [1, 2, 3, 4, 5];
+let slice = &a[1..3];
+```
+
+This slice has type `&[i32]`.
+
 ## Ranges
 
 A range is represented with `start..end`.
