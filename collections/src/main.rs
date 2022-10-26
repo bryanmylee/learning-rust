@@ -1,6 +1,7 @@
 fn main() {
     vectors();
     strings();
+    hashmaps();
 }
 
 fn vectors() {
@@ -89,4 +90,53 @@ fn strings() {
     for b in "नमस्त".bytes() {
         println!("{}", b);
     }
+}
+
+fn hashmaps() {
+    use std::collections::HashMap;
+
+    // HashMap will take ownership of the values it stores.
+    let mut scores = HashMap::new();
+
+    scores.insert(String::from("Blue"), 10);
+    scores.insert(String::from("Yellow"), 50);
+
+    let teams = vec![String::from("Blue"), String::from("Yellow")];
+    let initial_scores = vec![10, 50];
+    // type annotation needed to tell Rust what data type to collect into.
+    // _ generic argument asks Rust to infer automatically.
+    let scores: HashMap<_, _> = teams.iter().zip(initial_scores.iter()).collect();
+
+    // We can get values from a HashMap by providing its keys to the `get` method.
+    let team_name = String::from("Blue");
+    let score = scores.get(&team_name);
+    if let Some(score) = score {
+        println!("{} team has a score of {}", team_name, score)
+    }
+
+    // We can iterate over the entries of HashMap.
+    for (key, value) in &scores {
+        println!("{}: {}", key, value);
+    }
+
+    // When updating a value in the HashMap, we have to handle the case where the key already
+    // exists.
+    let mut scores = HashMap::new();
+    scores.insert(String::from("Blue"), 10);
+    scores.insert(String::from("Yellow"), 50);
+
+    // Overrides the value and returns an Option containing the previous value if it exists.
+    let prev_value = scores.insert(String::from("Blue"), 20);
+    if let Some(prev_value) = prev_value {
+        println!("Blue team had a previous score of {}", prev_value);
+    }
+
+    // Insert if a previous value doesn't exist.
+    // `entry(key)` returns an `Entry` enum that represents a value that might or might not exist
+    // in the HashMap.
+    let score = scores.entry(String::from("Blue")).or_insert(50);
+    println!("Blue team has a score of {}", score);
+    *score += 5;
+    println!("Blue team now has a score of {}", score);
+    println!("scores: {:?}", scores);
 }
