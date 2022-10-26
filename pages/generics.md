@@ -44,7 +44,7 @@ struct Point<T> {
     y: T,
 }
 
-impl <T> Point<T> {
+impl<T> Point<T> {
     fn x(&self) -> &T {
         &self.x
     }
@@ -221,3 +221,37 @@ We can also use `impl {trait}` in the return position to return a value of some 
 This is especially useful when using closures and iterators.
 
 One major restriction is that the **concrete return type must be a single type even if the type is opaque**. This means we cannot use `impl {trait}` to hide that a function returns multiple concrete types. This is due to restrictions around how `impl {trait}` is implemented in the compiler.
+
+## Using trait bounds to conditionally implement methods
+
+By using a trait bound with an `impl` block that uses generic type parameters, we can implement methods conditionally for types that implement the specified traits.
+
+```rs
+use std::fmt::Display;
+
+impl<T> Pair<T> {
+    fn new(x: T, y: T) -> Self {
+        Self {
+            x,
+            y,
+        }
+    }
+}
+
+impl<T: Display + PartialOrd> Pair<T> {
+    // this method only exists for Pair<T> where T implements `Display` and `PartialOrd`.
+    fn cmp_display(&self) {
+        // --snip--
+    }
+}
+```
+
+We can also conditionally implement a trait for any type that implements another trait. Implementations of a trait on any type that satisfies the trait bounds are called _blanket implementations_. For example, the standard library implements the `ToString` trait on any type that implements the `Display` trait. This provides the method `to_string` to any type that implements `Display`.
+
+```rs
+impl<T: Display> ToString for T {
+    // --snip--
+}
+```
+
+More specific implementations can still be provided to override the blanket implementation.
