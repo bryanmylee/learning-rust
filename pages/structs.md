@@ -141,8 +141,26 @@ fn main() {
 }
 ```
 
-To define methods, we start an `impl` block. Methods always take `self` as the first argument.
+To define methods, we start an `impl` block. Methods always take `self` as the first argument. A struct can have multiple `impl` blocks which will be merged.
 
 Instead of specifying the type and any reference semantics on the type, we specify them directly on `self` because Rust knows to infer the type of `self` from the `impl` block e.g. `&mut self` instead of `rect: &mut Rectangle`.
 
 Methods can take ownership of `self`, borrow `self` immutably, or borrow `self` mutably. It is rare for methods to take ownership; this technique is usually used when the method transforms `self` and we want to prevent the caller from using the original instance.
+
+# Associated functions
+
+Associated functions do not take `self` as a parameter and instead are just associated with the struct.
+
+```rs
+impl Rectangle {
+    fn square(size: u32) -> Rectangle {
+        Rectangle { width: size, height: size }
+    }
+}
+```
+
+We call associated functions with `::`.
+
+```rs
+let square = Rectangle::square(6);
+```
