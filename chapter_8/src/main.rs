@@ -9,6 +9,9 @@ fn main() {
         get_median(&numbers),
         get_mode(&numbers)
     );
+
+    let sentence = String::from("first apple");
+    println!("{} in pig latin is {}.", sentence, pig_latin(&sentence));
 }
 
 fn get_mean(numbers: &Vec<i32>) -> f32 {
@@ -50,4 +53,40 @@ fn get_mode(numbers: &Vec<i32>) -> Vec<i32> {
         }
     }
     mode
+}
+
+fn pig_latin(sentence: &str) -> String {
+    let mut result: Vec<String> = Vec::new();
+    for word in sentence.split_whitespace() {
+        result.push(pig_latin_word(word));
+    }
+    result.join(" ")
+}
+
+fn pig_latin_word(word: &str) -> String {
+    let mut chars = word.chars();
+    let first = chars.next();
+    if let Some(first) = first {
+        if ['a', 'e', 'i', 'o', 'u'].contains(&first) {
+            pig_latin_vowel(word)
+        } else {
+            pig_latin_consonant(first, chars.as_str())
+        }
+    } else {
+        String::from("")
+    }
+}
+
+fn pig_latin_consonant(first: char, rest: &str) -> String {
+    let mut result = String::from(rest);
+    result.push('-');
+    result.push(first);
+    result.push_str("ay");
+    result
+}
+
+fn pig_latin_vowel(word: &str) -> String {
+    let mut result = String::from(word);
+    result.push_str("-hay");
+    result
 }
