@@ -13,6 +13,8 @@ Rust can compile any code examples that appear in API documentation and run them
 
 A test will fail on panic. Rust provides several helper macros for assertions.
 
+## Assertion macros
+
 `assert!`
 
 Asserts that its argument is true.
@@ -27,7 +29,7 @@ Asserts that its two arguments are not equal and prints the received arguments o
 
 Under the hood, `assert_eq!` and `assert_ne!` uses `==` and `!=`. When the assertions fail, these macros print their arguments using debug formatting. Therefore, the two arguments must implement the `PartialEq` and `Debug` traits. Because both traits are derivable, this is usually as simple as adding the `#[derive(PartialEq, Debug)]` annotation to the struct or enum definition.
 
-## Custom format messages
+### Custom format messages
 
 The assertion macros take an optional argument for a format string.
 
@@ -63,3 +65,11 @@ fn panics_on_greater_than_100() {
     Guess::new(200);
 }
 ```
+
+## Using `Result<T, E>` in tests
+
+Instead of using the assertion macros, we can return a `Result<T, E>` from the test function. Return `Ok(())` when the test passes and `Err(message)` when it fails.
+
+This lets us use the question mark operator in the test body which can be a convenient way to write tests that should fail if any operation within them returns an `Err` variant.
+
+You can't use the `#[should_panic]` annotation on tests that use `Result<T, E>`. Instead, you should return an `Err` value directly when the test should fail.
