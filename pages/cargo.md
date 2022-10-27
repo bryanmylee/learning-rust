@@ -19,3 +19,7 @@ Convenience to run the compiled binary in `target`.
 `cargo check`
 
 Lint the source code. This process is much faster than building the entire program with `cargo build`.
+
+`cargo test`
+
+Runs tests.
