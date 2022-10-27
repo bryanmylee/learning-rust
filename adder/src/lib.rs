@@ -1,3 +1,7 @@
+pub fn add_two(to: usize) -> usize {
+    add(to, 2)
+}
+
 pub fn add(left: usize, right: usize) -> usize {
     left + right
 }
