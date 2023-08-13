@@ -84,6 +84,52 @@ impl Summary for Tweet {
     }
 }
 
+/**
+ * We can conditionally implement methods for types that satisfy a given trait bound.
+ */
+struct Pair<T> {
+    x: T,
+    y: T,
+}
+
+/**
+ * Create a generic implementation for any type `T` in `Pair<T>`.
+ */
+impl<T> Pair<T> {
+    fn new(x: T, y: T) -> Self {
+        Self { x, y }
+    }
+}
+
+/**
+ * Create implementations for `Pair<T>` where `T` is `Display + PartialOrd`.
+ */
+impl<T> Pair<T>
+where
+    T: Display + PartialOrd,
+{
+    fn cmp_display(&self) {
+        if self.x >= self.y {
+            println!("x {} is larger than y", self.x);
+        }
+    }
+}
+
+/**
+ * Blanket implementations for traits allow us to automatically implement traits for any type that
+ * satisfy another set of traits.
+ *
+ * Note that we can only create blanket implementations for local traits.
+ */
+impl<T> Summary for T
+where
+    T: Display,
+{
+    fn summarize_author(&self) -> String {
+        self.to_string()
+    }
+}
+
 fn generic_methods() {
     let list = vec![1, 2, 3, 4, 5, 9, 10, 4, 5];
     println!("Largest in {:?} is {}", list, largest(&list));
