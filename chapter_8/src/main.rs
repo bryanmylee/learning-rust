@@ -14,7 +14,7 @@ fn main() {
     println!("{} in pig latin is {}.", sentence, pig_latin(&sentence));
 }
 
-fn get_mean(numbers: &Vec<i32>) -> f32 {
+fn get_mean(numbers: &[i32]) -> f32 {
     let mut sum = 0;
     for number in numbers {
         sum += number
@@ -22,9 +22,11 @@ fn get_mean(numbers: &Vec<i32>) -> f32 {
     (sum as f32) / (numbers.len() as f32)
 }
 
-fn get_median(numbers: &Vec<i32>) -> f32 {
-    let mut numbers = numbers.clone();
-    numbers.sort();
+fn get_median(numbers: &[i32]) -> f32 {
+    let mut mut_numbers = vec![0; numbers.len()];
+    numbers.clone_into(&mut mut_numbers);
+    mut_numbers.sort();
+    let numbers = mut_numbers;
     if numbers.len() % 2 == 0 {
         let idx = numbers.len() / 2;
         ((numbers[idx] + numbers[idx - 1]) as f32) / 2.0
@@ -34,7 +36,7 @@ fn get_median(numbers: &Vec<i32>) -> f32 {
     }
 }
 
-fn get_mode(numbers: &Vec<i32>) -> Vec<i32> {
+fn get_mode(numbers: &[i32]) -> Vec<i32> {
     let mut number_to_count: HashMap<i32, i32> = HashMap::new();
     for number in numbers {
         let count = number_to_count.entry(*number).or_insert(0);
