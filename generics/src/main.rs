@@ -1,6 +1,65 @@
+use std::fmt::{Debug, Display};
+
 fn main() {
+    trait_bounds();
     generic_methods();
 }
+
+fn trait_bounds() {
+    let tweet = Tweet {
+        username: String::from("bryanleebmy"),
+        content: String::from("We are watching Shameless!"),
+        reply: false,
+        retweet: false,
+    };
+    println!("{}", tweet.summarize());
+    notify(tweet);
+}
+
+pub fn notify(item: impl Summary) {
+    println!("Breaking news! {}", item.summarize());
+}
+
+/**
+ * The trait bound syntax is required if we want to specify more complex requirements e.g.
+ * constraining two parameters to have the same type.
+ */
+pub fn notify_trait_bound_syntax<T: Summary>(item1: T, item2: T) {
+    println!("Breaking news! {}", item1.summarize());
+    println!("Breaking news! {}", item2.summarize());
+}
+
+/**
+ * Use + to specify multiple trait bounds.
+ */
+pub fn multiple_bounds<T: Summary + Display>(item: T) {
+    println!("{}", item); // {} can be used to format due to `Display` trait.
+}
+
+/**
+ * Too many generic trait bounds can be unreadable as a lot of trait bound information is placed
+ * between the function name and its parameters, making the signature hard to read.
+ *
+ * We can use the `where` clause to specify trait bounds after the parameter list.
+ */
+pub fn where_clause<T, U>(t: T, u: U) -> i32
+where
+    T: Display + Clone,
+    U: Clone + Debug,
+{
+    0
+}
+
+/**
+ * We can also use the `impl Trait` syntax to return a value of some type that implements some
+ * trait. This is especially useful for closures and iterators as we can return some type that
+ * implements the `Iterator` trait without writing out the whole type.
+ *
+ * However, **this does not allow for polymorphic return types**. We cannot return a union of
+ * multiple types because the size, alignment, and other properties of the type would not match.
+ *
+ * `impl Trait` return syntax is purely a cosmetic improvement.
+ */
 
 pub trait Summary {
     // Specifying a trait method that has to be fulfilled by implementing structs.
