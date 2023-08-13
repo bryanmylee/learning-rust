@@ -20,7 +20,7 @@ fn vectors() {
     } // _v is freed and all of its contents are also dropped.
 
     // Reading elements
-    let mut v = vec![1, 2, 3, 4, 5];
+    let v = vec![1, 2, 3, 4, 5];
 
     // If the value dues not exist, this will cause a panic.
     let third = &v[2];
