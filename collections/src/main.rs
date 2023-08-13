@@ -6,7 +6,7 @@ fn main() {
 
 fn vectors() {
     // type annotation required because empty initial value.
-    let _empty_vector: Vec<i32> = Vec::new();
+    let _empty_vector = Vec::<i32>::new();
     // macro shorthand
     let _vector = vec![1, 2, 3];
 
@@ -105,7 +105,10 @@ fn hashmaps() {
     let initial_scores = vec![10, 50];
     // type annotation needed to tell Rust what data type to collect into.
     // _ generic argument asks Rust to infer automatically.
-    let scores: HashMap<_, _> = teams.iter().zip(initial_scores.iter()).collect();
+    let scores = teams
+        .into_iter()
+        .zip(initial_scores.into_iter())
+        .collect::<HashMap<_, _>>();
 
     // We can get values from a HashMap by providing its keys to the `get` method.
     let team_name = String::from("Blue");
@@ -136,6 +139,8 @@ fn hashmaps() {
     // in the HashMap.
     let score = scores.entry(String::from("Blue")).or_insert(50);
     println!("Blue team has a score of {}", score);
+    // Since score is a mutable reference to the value in the map entry, we have to dereference it
+    // with `*` for read and write operations (if it is a mutable reference).
     *score += 5;
     println!("Blue team now has a score of {}", score);
     println!("scores: {:?}", scores);
