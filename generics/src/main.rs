@@ -181,6 +181,10 @@ fn lifetimes() {
     //`'static` lifetimes last the entire duration of the program's execution.
     // All string literals exist in the program's binary and therefore will always be available.
     let _s: &'static str = "A static lifetime";
+
+    // Even though lifetime parameters are specified the generic arguments, they are omitted when
+    // specifying specific types.
+    longest_with_an_announcement::<String>("hi", "bye", String::from("an announcement"));
 }
 
 /**
@@ -203,4 +207,16 @@ fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
 
 struct ImportantExcerpt<'a> {
     part: &'a str,
+}
+
+fn longest_with_an_announcement<'a, T>(x: &'a str, y: &'a str, ann: T) -> &'a str
+where
+    T: Display,
+{
+    println!("Announcement! {}", ann);
+    if x.len() > y.len() {
+        x
+    } else {
+        y
+    }
 }
