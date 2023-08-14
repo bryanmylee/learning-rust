@@ -3,6 +3,7 @@ use std::fmt::{Debug, Display};
 fn main() {
     trait_bounds();
     generic_methods();
+    lifetimes();
 }
 
 fn trait_bounds() {
@@ -133,7 +134,19 @@ where
 fn generic_methods() {
     let list = vec![1, 2, 3, 4, 5, 9, 10, 4, 5];
     println!("Largest in {:?} is {}", list, largest(&list));
+}
 
+fn largest<T: PartialOrd>(list: &[T]) -> &T {
+    let mut largest_item = &list[0];
+    for item in list.iter() {
+        if item > largest_item {
+            largest_item = item
+        }
+    }
+    largest_item
+}
+
+fn lifetimes() {
     let string1 = String::from("abcd");
     let string2 = "xyz";
     let result = longest(&string1, string2);
@@ -148,22 +161,46 @@ fn generic_methods() {
     // Fails to compile because `result` will receive the lifetime of `string2` and be invalid
     // after the previous scope ends.
     // println!("The longest string is {}", result);
-}
 
-fn largest<T: PartialOrd>(list: &[T]) -> &T {
-    let mut largest_item = &list[0];
-    for item in list.iter() {
-        if item > largest_item {
-            largest_item = item
-        }
+    let novel = String::from("Call me Ishmael. Some years ago...");
+    let first_sentence = novel.split('.').next().expect("Could not find a '.'");
+    let i = ImportantExcerpt {
+        part: first_sentence,
+    };
+
+    let i2: ImportantExcerpt;
+    {
+        let s2 = String::from("A new novel");
+        i2 = ImportantExcerpt { part: &s2 };
+        // i2 is valid here...
+        println!("Excerpt part in s2's scope: {}", i2.part);
     }
-    largest_item
+    // but not here.
+    // println!("Excerpt part outside s2's scope: {}", i2.part);
+
+    //`'static` lifetimes last the entire duration of the program's execution.
+    // All string literals exist in the program's binary and therefore will always be available.
+    let _s: &'static str = "A static lifetime";
 }
 
+/**
+ * Annotating a parameter with `'a` implies that the parameter will have a lifetime as long as `'a`.
+ *
+ * By annotating both `x` and `y` with the same lifetime parameter, we tell Rust that both `x` and
+ * `y` lives at least as long as `'a`. `'a` therefore cannot live longer than either `x` or `y`,
+ * and will represent a lifetime that is the overlap of `x` and `y`'s lifetime.
+ *
+ * This tells Rust that the returned reference will have a lifetime that lasts as long as both `x`
+ * and `y`.
+ */
 fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
     if x.len() > y.len() {
         x
     } else {
         y
     }
+}
+
+struct ImportantExcerpt<'a> {
+    part: &'a str,
 }
