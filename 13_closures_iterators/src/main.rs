@@ -4,6 +4,17 @@ use std::time::Duration;
 fn main() {
     println!("Hello, world!");
     generate_workout(3, 3);
+
+    for val in Counter::new() {
+        println!("{val}");
+    }
+
+    let sum = Counter::new()
+        .zip(Counter::new().skip(1))
+        .map(|(a, b)| a * b)
+        .filter(|x| x % 3 == 0)
+        .sum::<u32>();
+    println!("Sum of the computation is: {sum}");
 }
 
 fn generate_workout(intensity: u32, random_number: u32) {
@@ -55,6 +66,30 @@ where
                 self.value = Some(v);
                 v
             }
+        }
+    }
+}
+
+struct Counter {
+    count: u32,
+}
+
+impl Counter {
+    fn new() -> Counter {
+        Counter { count: 0 }
+    }
+}
+
+impl Iterator for Counter {
+    type Item = u32;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.count += 1;
+
+        if self.count < 6 {
+            Some(self.count)
+        } else {
+            None
         }
     }
 }
