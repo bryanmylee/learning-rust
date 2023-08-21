@@ -1,17 +1,19 @@
-pub struct Config<'a> {
-    pub query: &'a String,
-    pub filename: &'a String,
+pub struct Config {
+    pub query: String,
+    pub filename: String,
     pub case_sensitive: bool,
 }
 
-impl<'a> Config<'a> {
-    pub fn new(args: &'a [String]) -> Result<Self, &str> {
-        if args.len() < 3 {
-            return Err("not enough arguments");
-        }
+impl Config {
+    pub fn new(mut args: std::env::Args) -> Result<Self, &'static str> {
+        args.next();
 
-        let query = &args[1];
-        let filename = &args[2];
+        let Some(query) = args.next() else {
+            return Err("Didn't get a query string");
+        };
+        let Some(filename) = args.next() else {
+            return Err("Didn't get a file name");
+        };
 
         let case_sensitive = env::var("CASE_SENSITIVE").is_err();
 
@@ -31,7 +33,7 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let results = if config.case_sensitive {
         search(&config.query, &contents)
     } else {
-        search_case_insensitive(&config.query, &config.filename)
+        search_case_insensitive(&config.query, &contents)
     };
 
     for line in results {
