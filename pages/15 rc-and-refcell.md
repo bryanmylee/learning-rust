@@ -41,3 +41,54 @@ fn main() {
     println!("count after c goes out of scope = {}", Rc::strong_count(&a));
 }
 ```
+
+# Interior mutability
+
+_Interior mutability_ is a design pattern in Rust that allows mutation of data even when there are immutable references to that data.
+
+To mutate data, the pattern uses `unsafe` code inside a data structure to bend Rust's usual rules that govern mutation and borrowing.
+
+We can use types that use the interior mutability pattern when we can ensure that the borrowing rules will be followed at runtime, even though the compiler can't guarantee that. The `unsafe` code is then wrapped in a safe API and the outer type is still immutable.
+
+## Enforcing borrowing rules at runtime with `RefCell<T>`
+
+The `RefCell<T>` type represents single ownership over the data it holds. Unlike `Box<T>`, the borrowing rules' invariants are enforced **at runtime**. If we break these rules, instead of a compiler error, the program will panic and exit.
+
+Usually, compile-time checks are better as they allow bugs to be caught sooner in the development process, and there is no impact on runtime performance as all analysis is done beforehand.
+
+Some ownership rules are impossible to check statically, and Rust makes the safe and conservative assumption to reject them. However, there are certain memory-safe situations where we can be sure our code follows the borrowing rules. `RefCell` allows us to accomplish this goal.
+
+## A mutable borrow to an immutable value
+
+Due to borrowing rules, when we have an immutable value, we cannot borrow it mutable.
+
+```rs
+fn main() {
+    let x = 5;
+    let y = &mut x; // fails to compile.
+}
+```
+
+There are situations in which it would be useful for a value to mutate itself in its methods but appear immutable to other code. Using `RefCell<T>` is one way to get this ability. However, `RefCell<T>` does not get around the borrowing rules completely. The rules are just deferred to runtime checks instead.
+
+### Interior mutability for mock objects
+
+A _test double_ is a general programming concept for a type used in place of another type during **testing**. _Mock objects_ are specific types of test doubles that record what happens during a test so we can assert that the correct actions occurred.
+
+## Tracking borrows at runtime with `Refcell<T>`
+
+We use `&` and `&mut` to create immutable and mutable references. Similarly with `RefCell<T>`, we use the `borrow` and `borrow_mut` methods which are part of the safe API that belongs to `RefCell<T>`. The `borrow` and `borrow_mut` methods return the smart pointer types `Ref<T>` and `RefMut<T>`, which implement `Deref` so they can be treated like regular references.
+
+`RefCell<T>` keeps track of how many `Ref<T>` and `RefMut<T>` smart pointers are currently active. The respective counts increment whenever `borrow` or `borrow_mut` are called. When a `Ref<T>` or `RefMut<T>` goes out of scope, the respective counts decrement. Just like compile-time checks, `RefCell<T>` enforces either one unique `RefMut<T>` or multiple `Ref<T>` only at any given time.
+
+# Multiple owners of mutable data
+
+With an `Rc<T>` that holds a `RefCell<T>`, we can have multiple owners of mutable data.
+
+```rs
+#[derive(Debug)]
+enum List {
+    Cons(Rc<RefCell<i32>>, Rc<List>),
+    Nil,
+}
+```
