@@ -92,3 +92,17 @@ enum List {
     Nil,
 }
 ```
+
+# Reference cycle leaks
+
+Reference cycles occur when multiple `Rc<T>` items refer to one another in a cycle, causing the reference count of all items to always be at least one.
+
+Creating reference cycles is not easily done but it's not impossible either. If we have `RefCell<T>` values that contain `Rc<T>` values, we need to ensure that we don't create cycles as Rust won't catch them.
+
+## Preventing reference cycles with weak references
+
+To avoid reference cycles, we can downgrade strong references into _weak references_ by calling `Rc::downgrade` and passing a reference to the `Rc<T>`. `Rc::downgrade` returns a smart pointer of type `Weak<T>`. Instead of increasing the reference count by 1, `Rc::downgrade` increases the `weak_count` by 1. Unlike `strong_count`, `weak_count` does not have to be 0 for the `Rc<T>` instance to be cleaned up.
+
+Strong references express an ownership relationship while weak references do not. Because the value that `Weak<T>` references might have been dropped, to do anything with the value that a `Weak<T>` is pointing to, you must make sure the value exists. Do this by calling the `upgrade` method on a `Weak<T>` instance, which will return an `Option<Rc<T>>`.
+
+When an object that holds a strong reference is dropped, the objects it references strongly should also be dropped. When an object that holds a weak reference is dropped, the objects it references weakly should **not** be dropped.
