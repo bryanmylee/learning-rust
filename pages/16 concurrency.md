@@ -86,7 +86,7 @@ The `move` closure is often used with `thread::spawn` to use data from one threa
 
 `thread::spawn` takes a closure that accepts no arguments, so to use data from the main thread in the spawned thread, the spawned thread's closure must capture the values it needs. Since the the spawned thread might outlive the main thread, we cannot guarantee that a reference will still be valid when needed. Therefore, we have to move ownership of the variables into the spawned thread.
 
-## Message passing to transfer data between threads
+# Message passing to transfer data between threads
 
 _Message passing_ is a popular way to ensuring safe concurrency, where threads or **actors** communicate by sending each other messages containing data. A slogan from Golang's documentation: "Do not communicate by sharing memory; instead, share memory by communicating".
 
@@ -129,3 +129,99 @@ If the channel is closed, `tx.send` will return `Err`.
 `rx.recv` blocks the thread and waits until a value is received.
 
 `rx.try_recv` does not block, but will return a `Result<T, E>` immediately: An `Ok` value holding a message if one is available and an `Err` value if there aren't any messages at the time.
+
+# Shared state concurrency
+
+_Mutexes_ only allow one thread to access some data at any given time. A thread must first signal that it wants access by asking to acquire the mutex's _lock_.
+
+Mutexes are usually difficult to use because we have to remember two rules:
+
+1. we must attempt to acquire the lock before using data
+2. when we are done with the data, we must unlock the data so other threads can acquire
+
+```rs
+use std::sync::Mutex;
+
+fn main() {
+    let m = Mutex::new(5);
+
+    {
+        let mut num = m.lock().unwrap();
+        *num = 6;
+    }
+
+    println!("m = {m:?}");
+}
+```
+
+The `lock` call blocks the current thread until it is our turn to have the lock. If another thread panics while holding the lock, the call to `lock` will fail and no one else will be able to acquire the lock.
+
+After we acquire the lock, we can treat the return value as a mutable reference to the value inside. The return value is type `MutexGuard<T>`, which is a smart pointer that has a `Drop` implementation to release the lock automatically.
+
+## Sharing mutexes between threads
+
+```rs
+use std::sync::{Arc, Mutex};
+use std::thread;
+
+fn main() {
+    let counter = Arc::new(Mutex::new(0));
+    let mut handles = vec![];
+
+    for _ in 0..10 {
+        let counter = counter.clone();
+        let handle = thread::spawn(move || {
+            let mut num = counter.lock().unwrap();
+
+            *num += 1;
+        });
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        handle.join().unwrap();
+    }
+
+    println!("Result: {}", *counter.lock().unwrap());
+}
+```
+
+Each thread needs to own the counter. To enable multiple ownership, we need reference counting. However, `Rc<T>` does not implement the `Send` trait. The `Send` trait indicates that a type can be safely sent between threads.
+
+`Rc<T>` does not use concurrency-safe primitives to ensure that changes to its internal count can't be interrupted by another thread. Therefore, we need to use `Arc<T>` which has the same interface as `Rc<T>`, but it uses concurrent safe primitives. `Arc<T>` represents an _atomically reference counted_ type.
+
+`Arc<T>` has more overheads than `Rc<T>` as it uses concurrent safe primitives that have more checks. If our code only runs on a single thread, we should simply use `Rc<T>`.
+
+## Interior mutability of `Mutex<T>`
+
+Although `Mutex<T>` is immutable, we are able to get a mutable reference to the value inside it with `lock` using interior mutability, much like the `Cell` family does.
+
+Just like how we use `Mutex<T>` to mutate data inside an `Arc<T>`, we use `RefCell<T>` to mutate data inside an `Rc<T>`.
+
+## Deadlocks
+
+Similar to how `Rc<T>` cannot prevent us from making reference cycle mistakes, `Mutex<T>` cannot prevent us from creating _deadlocks_.
+
+# `Send` trait
+
+The `Send` marker trait indicates that an implementing type can have its ownership transferred between threads.
+
+Almost every Rust type is `Send`, with a few exceptions like `Rc<T>`: this cannot be `Send` because if we clone the `Rc<T>` and transferred ownership to another thread, both threads might update the reference count at the same time.
+
+Any type composed entirely of `Send` types is automatically marked as `Send` as well.
+
+# `Sync` trait
+
+The `Sync` marker trait indicates that it is safe for the implementing type to be referenced from multiple threads.
+
+In other words, any type `T` is `Sync` if `&T` is `Send`, meaning the reference can be sent safely to another thread.
+
+The smart pointer `Rc<T>` is not `Sync` for the same reasons it is not `Send`. The `Cell` family of types is also not `Sync` as the runtime implementation of borrow checking is not thread-safe.
+
+Any type composed entirely of `Sync` is automatically marked as `Sync` as well.
+
+# Implementing `Send` and `Sync` manually is unsafe
+
+As marker traits, `Send` and `Sync` has **no methods to implement**. They are just useful for enforcing invariants related to concurrency. We can get `Send` and `Sync` by composing types entirely made up of `Send` and `Sync` traits.
+
+Manually implementing these traits require `unsafe` Rust code.
